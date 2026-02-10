@@ -11,15 +11,7 @@ export class MyMemoryTranslationAdapter implements TranslationPort {
     transcriptId: string
   ): Promise<Translation> {
     if (from === to) {
-      return new Translation({
-        id: uuidv4(),
-        sourceText: text,
-        translatedText: text,
-        sourceLanguage: from,
-        targetLanguage: to,
-        transcriptId,
-        createdAt: new Date(),
-      });
+      throw new Error('Source and target language are the same — no translation needed');
     }
 
     const response = await fetch('/api/translate', {
