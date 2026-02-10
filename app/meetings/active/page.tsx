@@ -232,7 +232,20 @@ function ActiveMeetingContent() {
           <ParticipantList participants={participants} />
         </div>
         <div className="flex items-center gap-3">
-          <LanguageSelector label={t('meeting.sourceLang')} value={sourceLang} onChange={setSourceLang} />
+          <LanguageSelector
+            label={t('meeting.sourceLang')}
+            value={sourceLang}
+            onChange={(v) => {
+              setSourceLang(v);
+              if (isRecording) {
+                const meetingToUse = activeMeeting ?? realtimeMeeting;
+                if (meetingToUse) {
+                  speechRecognition.stop();
+                  setTimeout(() => startRecording(meetingToUse, v), 300);
+                }
+              }
+            }}
+          />
           <span className="text-muted-foreground">→</span>
           <LanguageSelector
             label={t('meeting.targetLang')}
