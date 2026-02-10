@@ -34,10 +34,18 @@ export function RecordingControls({
   return (
     <div className="flex flex-wrap items-center gap-3 p-4">
       {status === 'idle' && (
-        <Button onClick={onStart} size="lg" className="gap-2">
-          <Mic className="h-4 w-4" />
-          Start Recording
-        </Button>
+        <>
+          <Button onClick={onStart} size="lg" className="gap-2">
+            <Mic className="h-4 w-4" />
+            Start Recording
+          </Button>
+          {onSaveAndLeave && (
+            <Button onClick={onSaveAndLeave} variant="secondary" size="lg" className="gap-2">
+              <Save className="h-4 w-4" />
+              Save & Leave
+            </Button>
+          )}
+        </>
       )}
 
       {status === 'recording' && (
