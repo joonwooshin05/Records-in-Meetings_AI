@@ -50,6 +50,7 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
           timestamp: this.elapsedOffset + (Date.now() - this.startTime),
           language,
           isFinal: result.isFinal,
+          createdAt: Date.now(),
         });
         this.resultCallback(transcript);
       }

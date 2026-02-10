@@ -94,7 +94,7 @@ function ActiveMeetingContent() {
     const merged = new Map<string, Transcript>();
     for (const t of remoteTranscripts) merged.set(t.id, t);
     for (const t of transcripts) merged.set(t.id, t);
-    return Array.from(merged.values()).sort((a, b) => a.timestamp - b.timestamp);
+    return Array.from(merged.values()).sort((a, b) => a.createdAt - b.createdAt);
   }, [meetingCode, remoteTranscripts, transcripts]);
 
   // Re-subscribe to Firestore when page loads with a meeting code
@@ -177,7 +177,7 @@ function ActiveMeetingContent() {
         ...props,
         userId: user?.id ?? props.userId,
         status,
-        transcripts: Array.from(allTranscripts.values()).sort((a, b) => a.timestamp - b.timestamp),
+        transcripts: Array.from(allTranscripts.values()).sort((a, b) => a.createdAt - b.createdAt),
         updatedAt: new Date(),
       });
       await meetingService.saveMeeting(updated);

@@ -10,6 +10,7 @@ export interface TranscriptProps {
   speakerId?: string;
   speakerPhotoURL?: string;
   session?: number;
+  createdAt?: number;
 }
 
 export class Transcript {
@@ -22,6 +23,7 @@ export class Transcript {
   readonly speakerId?: string;
   readonly speakerPhotoURL?: string;
   readonly session?: number;
+  readonly createdAt: number;
 
   constructor(props: TranscriptProps) {
     if (!props.id) throw new Error('Transcript id cannot be empty');
@@ -37,5 +39,6 @@ export class Transcript {
     this.speakerId = props.speakerId;
     this.speakerPhotoURL = props.speakerPhotoURL;
     this.session = props.session;
+    this.createdAt = props.createdAt ?? Date.now();
   }
 }
