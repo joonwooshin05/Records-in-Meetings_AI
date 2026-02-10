@@ -29,7 +29,7 @@ export class MyMemoryTranslationAdapter implements TranslationPort {
       });
     }
 
-    const langPair = `${LANGUAGE_CODES[from]}|${LANGUAGE_CODES[to]}`;
+    const langPair = `autodetect|${LANGUAGE_CODES[to]}`;
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
 
     let lastError: Error | null = null;

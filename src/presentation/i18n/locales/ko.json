@@ -26,7 +26,7 @@
     "translating": "번역 중...",
     "noTranscripts": "녹음을 시작하면 대화 기록이 여기에 표시됩니다.",
     "noSummary": "녹음 후 요약을 생성하세요.",
-    "sourceLang": "원본 언어",
+    "sourceLang": "음성인식",
     "targetLang": "번역 언어",
     "duration": "소요 시간",
     "meetingTitle": "회의 제목",
