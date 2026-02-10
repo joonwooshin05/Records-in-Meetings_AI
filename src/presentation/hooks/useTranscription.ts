@@ -60,6 +60,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
         if (activeMeeting.status === 'idle') {
           updateTranscripts([]);
           sessionRef.current = 0;
+          // Reset timer for fresh recording
           if ('resetTimer' in speechRecognition) {
             (speechRecognition as WebSpeechRecognitionAdapter).resetTimer();
           }
