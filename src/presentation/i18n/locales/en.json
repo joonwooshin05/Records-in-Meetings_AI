@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "Meeting AI"
+  },
+  "dashboard": {
+    "title": "Meeting Dashboard",
+    "newMeeting": "New Meeting",
+    "noMeetings": "No meetings yet. Start your first meeting!",
+    "transcripts": "transcripts",
+    "summaryAvailable": "Summary available"
+  },
+  "meeting": {
+    "transcript": "Transcript",
+    "translation": "Translation",
+    "summary": "Summary",
+    "recording": "Recording",
+    "paused": "Paused",
+    "completed": "Completed",
+    "idle": "Ready",
+    "start": "Start Recording",
+    "stop": "Stop",
+    "pause": "Pause",
+    "resume": "Resume",
+    "generateSummary": "Generate Summary",
+    "generating": "Generating summary...",
+    "translating": "Translating...",
+    "noTranscripts": "Start recording to see transcripts here.",
+    "noSummary": "Generate a summary after recording.",
+    "sourceLang": "Source Language",
+    "targetLang": "Target Language",
+    "duration": "Duration",
+    "meetingTitle": "Meeting Title",
+    "enterTitle": "Enter meeting title",
+    "saveAndLeave": "Save & Leave"
+  },
+  "settings": {
+    "title": "Settings",
+    "languageDefaults": "Language Defaults",
+    "defaultSourceLang": "Default Source Language",
+    "defaultTargetLang": "Default Target Language",
+    "uiLanguage": "UI Language",
+    "clearData": "Clear All Data",
+    "clearConfirm": "Are you sure? This will delete all meeting data.",
+    "speechNotSupported": "Speech recognition is not supported in your browser. Please use Chrome."
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "orContinueWith": "Or continue with",
+    "google": "Continue with Google",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "realtime": {
+    "joinMeeting": "Join Meeting",
+    "meetingCode": "Meeting Code",
+    "enterCode": "Enter meeting code",
+    "copied": "Copied!",
+    "participants": "Participants",
+    "host": "Host",
+    "participant": "Participant",
+    "noMeetingFound": "Meeting not found. Please check the code.",
+    "waitingForHost": "Waiting for the host to start recording...",
+    "hostRecording": "Host is recording. Live transcription in progress.",
+    "meetingEnded": "Meeting has ended.",
+    "liveTranscription": "Live transcription in progress",
+    "joining": "Joining...",
+    "leaving": "Leaving..."
+  },
+  "common": {
+    "back": "Back",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  }
+}
