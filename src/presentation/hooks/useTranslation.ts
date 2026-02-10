@@ -6,8 +6,8 @@ import type { Transcript } from '@/src/domain/entities/Transcript';
 import type { Language } from '@/src/domain/entities/Language';
 import { useDependencies } from '@/src/presentation/providers/DependencyProvider';
 
-const DELAY_MS = 1000;
-const MAX_RETRIES = 3;
+const DELAY_MS = 200;
+const MAX_RETRIES = 2;
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
