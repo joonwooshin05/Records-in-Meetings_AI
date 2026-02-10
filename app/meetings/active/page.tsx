@@ -12,6 +12,7 @@ import { SummaryPanel } from '@/src/presentation/components/meeting/SummaryPanel
 import { LanguageSelector } from '@/src/presentation/components/meeting/LanguageSelector';
 import { MeetingCodeDisplay } from '@/src/presentation/components/meeting/MeetingCodeDisplay';
 import { ParticipantList } from '@/src/presentation/components/meeting/ParticipantList';
+import { AIAssistantDialog } from '@/src/presentation/components/meeting/AIAssistantDialog';
 import { useTranscription } from '@/src/presentation/hooks/useTranscription';
 import { useTranslation } from '@/src/presentation/hooks/useTranslation';
 import { useSummary } from '@/src/presentation/hooks/useSummary';
@@ -347,6 +348,7 @@ function ActiveMeetingContent() {
             onSaveAndLeave={handleSaveAndLeave}
             duration={formatDuration()}
           />
+          <AIAssistantDialog transcripts={displayTranscripts} sourceLanguage={sourceLang} />
         </div>
         {displayTranscripts.filter((t) => t.isFinal).length > 0 && (
           <div className="flex justify-end">
