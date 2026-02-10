@@ -3,13 +3,6 @@ import { Translation } from '@/src/domain/entities/Translation';
 import type { TranslationPort } from '@/src/domain/ports/TranslationPort';
 import { v4 as uuidv4 } from 'uuid';
 
-const LANGUAGE_CODES: Record<Language, string> = {
-  ko: 'ko',
-  en: 'en',
-  ja: 'ja',
-  zh: 'zh-CN',
-};
-
 export class MyMemoryTranslationAdapter implements TranslationPort {
   async translate(
     text: string,
@@ -29,25 +22,23 @@ export class MyMemoryTranslationAdapter implements TranslationPort {
       });
     }
 
-    const langPair = `${LANGUAGE_CODES[from]}|${LANGUAGE_CODES[to]}`;
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, from, to }),
+    });
 
-    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Translation API error: ${response.status}`);
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error ?? `Translation error: ${response.status}`);
     }
 
     const data = await response.json();
-    const translatedText = data.responseData?.translatedText ?? '';
-
-    if (!translatedText) {
-      throw new Error('No translation returned');
-    }
 
     return new Translation({
       id: uuidv4(),
       sourceText: text,
-      translatedText,
+      translatedText: data.translatedText,
       sourceLanguage: from,
       targetLanguage: to,
       transcriptId,
