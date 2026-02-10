@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Transcript } from '@/src/domain/entities/Transcript';
 import type { Translation } from '@/src/domain/entities/Translation';
 import type { Language } from '@/src/domain/entities/Language';
@@ -37,14 +37,13 @@ export function TranslationPanel({
   onRetry,
   emptyMessage,
 }: TranslationPanelProps) {
-  const topRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcripts, translations]);
 
   const finalTranscripts = transcripts.filter((t) => t.isFinal);
-  const reversedTranscripts = useMemo(() => [...finalTranscripts].reverse(), [finalTranscripts]);
 
   if (finalTranscripts.length === 0) {
     return (
@@ -59,8 +58,7 @@ export function TranslationPanel({
   return (
     <ScrollArea className="h-full">
       <div className="space-y-2 p-4">
-        <div ref={topRef} />
-        {reversedTranscripts.map((transcript) => {
+        {finalTranscripts.map((transcript) => {
           const translation = translations.get(transcript.id);
           const errorMsg = errors?.get(transcript.id);
           const isSameLanguage = transcript.language === targetLanguage;
@@ -100,6 +98,7 @@ export function TranslationPanel({
             Translating...
           </Badge>
         )}
+        <div ref={bottomRef} />
       </div>
     </ScrollArea>
   );
