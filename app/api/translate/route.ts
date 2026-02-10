@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       return NextResponse.json(
         { error: `Google Translate error: ${response.status}` },

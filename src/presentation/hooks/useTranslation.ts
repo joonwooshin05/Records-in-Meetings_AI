@@ -10,8 +10,50 @@ export function useTranslation() {
   const { translationPort } = useDependencies();
   const [translations, setTranslations] = useState<Map<string, Translation>>(new Map());
   const [isTranslating, setIsTranslating] = useState(false);
-  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
+  const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const pendingRef = useRef<Set<string>>(new Set());
+
+  const translateOne = useCallback(
+    (transcript: Transcript, targetLanguage: Language) => {
+      if (pendingRef.current.has(transcript.id)) return;
+      pendingRef.current.add(transcript.id);
+      setIsTranslating(true);
+
+      // Remove from errors if retrying
+      setErrors((prev) => {
+        if (!prev.has(transcript.id)) return prev;
+        const next = new Map(prev);
+        next.delete(transcript.id);
+        return next;
+      });
+
+      translationPort
+        .translate(transcript.text, transcript.language, targetLanguage, transcript.id)
+        .then((translation) => {
+          setTranslations((prev) => {
+            const next = new Map(prev);
+            next.set(transcript.id, translation);
+            return next;
+          });
+        })
+        .catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`[Translation] Failed for "${transcript.text.slice(0, 30)}":`, msg);
+          setErrors((prev) => {
+            const next = new Map(prev);
+            next.set(transcript.id, msg);
+            return next;
+          });
+        })
+        .finally(() => {
+          pendingRef.current.delete(transcript.id);
+          if (pendingRef.current.size === 0) {
+            setIsTranslating(false);
+          }
+        });
+    },
+    [translationPort]
+  );
 
   const translateBatch = useCallback(
     (transcripts: Transcript[], targetLanguage: Language) => {
@@ -20,45 +62,35 @@ export function useTranslation() {
           t.isFinal &&
           !translations.has(t.id) &&
           !pendingRef.current.has(t.id) &&
-          !failedIds.has(t.id)
+          !errors.has(t.id)
       );
 
-      if (toTranslate.length === 0) return;
-
-      setIsTranslating(true);
-
-      for (const transcript of toTranslate) {
-        pendingRef.current.add(transcript.id);
-
-        translationPort
-          .translate(transcript.text, transcript.language, targetLanguage, transcript.id)
-          .then((translation) => {
-            setTranslations((prev) => {
-              const next = new Map(prev);
-              next.set(transcript.id, translation);
-              return next;
-            });
-          })
-          .catch((err) => {
-            console.error(`[Translation] Failed for "${transcript.text.slice(0, 30)}":`, err);
-            setFailedIds((prev) => new Set(prev).add(transcript.id));
-          })
-          .finally(() => {
-            pendingRef.current.delete(transcript.id);
-            if (pendingRef.current.size === 0) {
-              setIsTranslating(false);
-            }
-          });
+      for (const t of toTranslate) {
+        translateOne(t, targetLanguage);
       }
     },
-    [translationPort, translations, failedIds]
+    [translateOne, translations, errors]
+  );
+
+  const retryFailed = useCallback(
+    (transcripts: Transcript[], targetLanguage: Language) => {
+      const failed = transcripts.filter((t) => errors.has(t.id));
+      setErrors(new Map());
+      for (const t of failed) {
+        translateOne(t, targetLanguage);
+      }
+    },
+    [translateOne, errors]
   );
 
   const clearTranslations = useCallback(() => {
     pendingRef.current.clear();
     setTranslations(new Map());
-    setFailedIds(new Set());
+    setErrors(new Map());
   }, []);
 
-  return { translations, isTranslating, failedIds, translateBatch, clearTranslations };
+  // Build failedIds set for backward compatibility
+  const failedIds = new Set(errors.keys());
+
+  return { translations, isTranslating, failedIds, errors, translateBatch, retryFailed, clearTranslations };
 }

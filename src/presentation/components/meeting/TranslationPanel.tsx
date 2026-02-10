@@ -5,12 +5,16 @@ import type { Transcript } from '@/src/domain/entities/Transcript';
 import type { Translation } from '@/src/domain/entities/Translation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface TranslationPanelProps {
   transcripts: Transcript[];
   translations: Map<string, Translation>;
   isTranslating: boolean;
   failedIds?: Set<string>;
+  errors?: Map<string, string>;
+  onRetry?: () => void;
   emptyMessage?: string;
 }
 
@@ -26,6 +30,8 @@ export function TranslationPanel({
   translations,
   isTranslating,
   failedIds,
+  errors,
+  onRetry,
   emptyMessage,
 }: TranslationPanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -44,11 +50,14 @@ export function TranslationPanel({
     );
   }
 
+  const hasFailures = failedIds && failedIds.size > 0;
+
   return (
     <ScrollArea className="h-full">
       <div className="space-y-2 p-4">
         {finalTranscripts.map((transcript) => {
           const translation = translations.get(transcript.id);
+          const errorMsg = errors?.get(transcript.id);
           return (
             <div key={transcript.id} className="flex gap-3">
               <span className="text-xs text-muted-foreground whitespace-nowrap pt-1">
@@ -57,6 +66,10 @@ export function TranslationPanel({
               <div className="flex-1">
                 {translation ? (
                   <p className="text-sm leading-relaxed">{translation.translatedText}</p>
+                ) : errorMsg ? (
+                  <p className="text-sm text-destructive italic">
+                    Error: {errorMsg}
+                  </p>
                 ) : failedIds?.has(transcript.id) ? (
                   <p className="text-sm text-destructive italic">Translation failed</p>
                 ) : (
@@ -68,6 +81,12 @@ export function TranslationPanel({
             </div>
           );
         })}
+        {hasFailures && onRetry && (
+          <Button onClick={onRetry} variant="outline" size="sm" className="gap-2 mt-2">
+            <RefreshCw className="h-3 w-3" />
+            Retry failed translations
+          </Button>
+        )}
         {isTranslating && (
           <Badge variant="outline" className="text-xs">
             Translating...

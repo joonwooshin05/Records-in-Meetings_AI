@@ -80,7 +80,7 @@ function ActiveMeetingContent() {
         : undefined,
     });
 
-  const { translations, isTranslating, failedIds, translateBatch, clearTranslations } = useTranslation();
+  const { translations, isTranslating, failedIds, errors, translateBatch, retryFailed, clearTranslations } = useTranslation();
   const {
     summary,
     isGenerating,
@@ -274,6 +274,8 @@ function ActiveMeetingContent() {
                   translations={translations}
                   isTranslating={isTranslating}
                   failedIds={failedIds}
+                  errors={errors}
+                  onRetry={() => retryFailed(displayTranscripts, targetLang)}
                 />
               </div>
             </div>
@@ -307,6 +309,9 @@ function ActiveMeetingContent() {
                 transcripts={displayTranscripts}
                 translations={translations}
                 isTranslating={isTranslating}
+                failedIds={failedIds}
+                errors={errors}
+                onRetry={() => retryFailed(displayTranscripts, targetLang)}
               />
             </TabsContent>
             <TabsContent value="summary" className="flex-1 min-h-0 border rounded-lg">
