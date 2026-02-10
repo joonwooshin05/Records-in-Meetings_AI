@@ -162,15 +162,20 @@ function ActiveMeetingContent() {
 
   const handleSaveAndLeave = useCallback(async () => {
     const saved = await saveAndLeave();
-    // If saveAndLeave didn't save (e.g. idle state), save the meeting with all transcripts
     const meetingToSave = saved ?? activeMeeting ?? realtimeMeeting;
-    if (meetingToSave && displayTranscripts.length > 0) {
+    if (meetingToSave) {
       const finalTranscripts = displayTranscripts.filter((t) => t.isFinal);
-      let updated = meetingToSave;
+      // Rebuild meeting with current user's ID so it appears in their meeting list
+      const { Meeting } = await import('@/src/domain/entities/Meeting');
+      const props = meetingToSave.toProps();
+      let updated = new Meeting({
+        ...props,
+        userId: user?.id ?? props.userId,
+        transcripts: [],
+        updatedAt: new Date(),
+      });
       for (const t of finalTranscripts) {
-        if (!updated.transcripts.some((existing) => existing.id === t.id)) {
-          updated = updated.addTranscript(t);
-        }
+        updated = updated.addTranscript(t);
       }
       await meetingService.saveMeeting(updated);
     }
@@ -178,7 +183,7 @@ function ActiveMeetingContent() {
       await updateStatus('paused');
     }
     router.push('/');
-  }, [saveAndLeave, activeMeeting, realtimeMeeting, displayTranscripts, meetingService, meetingCode, updateStatus, router]);
+  }, [saveAndLeave, activeMeeting, realtimeMeeting, displayTranscripts, meetingService, meetingCode, updateStatus, router, user]);
 
   const handleGenerateSummary = useCallback(() => {
     const id = meetingId ?? activeMeeting?.id;
