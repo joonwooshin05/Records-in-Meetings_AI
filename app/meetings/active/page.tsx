@@ -20,7 +20,7 @@ import { useDependencies } from '@/src/presentation/providers/DependencyProvider
 import { useAuth } from '@/src/presentation/providers/AuthProvider';
 import { useI18n } from '@/src/presentation/providers/I18nProvider';
 import type { Language } from '@/src/domain/entities/Language';
-import type { Meeting } from '@/src/domain/entities/Meeting';
+import { Meeting } from '@/src/domain/entities/Meeting';
 import type { Transcript } from '@/src/domain/entities/Transcript';
 import { ArrowLeft, Loader2, Radio } from 'lucide-react';
 
@@ -46,7 +46,7 @@ function ActiveMeetingContent() {
   const role = searchParams.get('role'); // 'host' | 'participant'
   const isParticipant = role === 'participant';
 
-  const { meetingService } = useDependencies();
+  const { meetingService, speechRecognition } = useDependencies();
   const { user } = useAuth();
   const { t } = useI18n();
 
@@ -64,7 +64,7 @@ function ActiveMeetingContent() {
     reconnect,
   } = useRealtimeMeeting();
 
-  const { meeting, transcripts, isRecording, error, startRecording, stopRecording, pauseRecording, saveAndLeave, loadTranscripts } =
+  const { meeting, transcripts, isRecording, error, startRecording, stopRecording, pauseRecording, loadTranscripts } =
     useTranscription({
       onTranscriptReady: meetingCode
         ? (transcript) => {
@@ -161,29 +161,32 @@ function ActiveMeetingContent() {
   }, [pauseRecording, meetingCode, updateStatus, isParticipant]);
 
   const handleSaveAndLeave = useCallback(async () => {
-    const saved = await saveAndLeave();
-    const meetingToSave = saved ?? activeMeeting ?? realtimeMeeting;
-    if (meetingToSave) {
-      const finalTranscripts = displayTranscripts.filter((t) => t.isFinal);
-      // Rebuild meeting with current user's ID so it appears in their meeting list
-      const { Meeting } = await import('@/src/domain/entities/Meeting');
-      const props = meetingToSave.toProps();
-      let updated = new Meeting({
+    speechRecognition.stop();
+
+    const baseMeeting = activeMeeting ?? realtimeMeeting;
+    if (baseMeeting) {
+      const props = baseMeeting.toProps();
+      // Merge all transcripts: existing + displayed, deduplicated
+      const allTranscripts = new Map<string, Transcript>();
+      for (const t of props.transcripts) allTranscripts.set(t.id, t);
+      for (const t of displayTranscripts) {
+        if (t.isFinal) allTranscripts.set(t.id, t);
+      }
+      const status = props.status === 'recording' ? 'paused' : props.status;
+      const updated = new Meeting({
         ...props,
         userId: user?.id ?? props.userId,
-        transcripts: [],
+        status,
+        transcripts: Array.from(allTranscripts.values()).sort((a, b) => a.timestamp - b.timestamp),
         updatedAt: new Date(),
       });
-      for (const t of finalTranscripts) {
-        updated = updated.addTranscript(t);
-      }
       await meetingService.saveMeeting(updated);
     }
     if (meetingCode) {
       await updateStatus('paused');
     }
     router.push('/');
-  }, [saveAndLeave, activeMeeting, realtimeMeeting, displayTranscripts, meetingService, meetingCode, updateStatus, router, user]);
+  }, [speechRecognition, activeMeeting, realtimeMeeting, displayTranscripts, meetingService, meetingCode, updateStatus, router, user]);
 
   const handleGenerateSummary = useCallback(() => {
     const id = meetingId ?? activeMeeting?.id;
