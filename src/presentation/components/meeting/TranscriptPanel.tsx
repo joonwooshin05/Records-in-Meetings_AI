@@ -69,13 +69,14 @@ function SpeakerAvatar({ name, photoURL }: { name?: string; photoURL?: string })
 }
 
 export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcripts]);
 
   const groups = useMemo(() => groupBySpeaker(transcripts), [transcripts]);
+  const reversedGroups = useMemo(() => [...groups].reverse(), [groups]);
 
   if (transcripts.length === 0) {
     return (
@@ -88,7 +89,8 @@ export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelPr
   return (
     <ScrollArea className="h-full">
       <div className="space-y-4 p-4">
-        {groups.map((group, gi) => (
+        <div ref={topRef} />
+        {reversedGroups.map((group, gi) => (
           <div key={`group-${gi}`} className="flex gap-3">
             <SpeakerAvatar name={group.speaker} photoURL={group.speakerPhotoURL} />
             <div className="flex-1 min-w-0">
@@ -116,7 +118,6 @@ export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelPr
             </div>
           </div>
         ))}
-        <div ref={bottomRef} />
       </div>
     </ScrollArea>
   );
