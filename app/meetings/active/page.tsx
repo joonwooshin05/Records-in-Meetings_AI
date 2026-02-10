@@ -126,12 +126,12 @@ function ActiveMeetingContent() {
     loadMeeting();
   }, [meetingId, meetingService, isParticipant, realtimeMeeting, loadTranscripts]);
 
-  // Auto-translate new final transcripts
+  // Auto-translate new final transcripts (uses autodetect for source language)
   useEffect(() => {
-    if (displayTranscripts.length > 0 && sourceLang !== targetLang) {
+    if (displayTranscripts.length > 0) {
       translateBatch(displayTranscripts, targetLang);
     }
-  }, [displayTranscripts, targetLang, sourceLang, translateBatch]);
+  }, [displayTranscripts, targetLang, translateBatch]);
 
   const handleStart = useCallback(async () => {
     const meetingToUse = activeMeeting ?? realtimeMeeting;
