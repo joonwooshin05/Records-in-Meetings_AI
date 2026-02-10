@@ -161,12 +161,24 @@ function ActiveMeetingContent() {
   }, [pauseRecording, meetingCode, updateStatus, isParticipant]);
 
   const handleSaveAndLeave = useCallback(async () => {
-    await saveAndLeave();
+    const saved = await saveAndLeave();
+    // If saveAndLeave didn't save (e.g. idle state), save the meeting with all transcripts
+    const meetingToSave = saved ?? activeMeeting ?? realtimeMeeting;
+    if (meetingToSave && displayTranscripts.length > 0) {
+      const finalTranscripts = displayTranscripts.filter((t) => t.isFinal);
+      let updated = meetingToSave;
+      for (const t of finalTranscripts) {
+        if (!updated.transcripts.some((existing) => existing.id === t.id)) {
+          updated = updated.addTranscript(t);
+        }
+      }
+      await meetingService.saveMeeting(updated);
+    }
     if (meetingCode) {
       await updateStatus('paused');
     }
     router.push('/');
-  }, [saveAndLeave, meetingCode, updateStatus, router]);
+  }, [saveAndLeave, activeMeeting, realtimeMeeting, displayTranscripts, meetingService, meetingCode, updateStatus, router]);
 
   const handleGenerateSummary = useCallback(() => {
     const id = meetingId ?? activeMeeting?.id;
