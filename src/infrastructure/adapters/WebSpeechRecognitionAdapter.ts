@@ -16,6 +16,7 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
   private errorCallback: ((error: Error) => void) | null = null;
   private endCallback: (() => void) | null = null;
   private startTime = 0;
+  private elapsedOffset = 0;
 
   isSupported(): boolean {
     if (typeof window === 'undefined') return false;
@@ -25,6 +26,11 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
   }
 
   start(language: Language): void {
+    // Accumulate elapsed time from previous segment (handles auto-restart)
+    if (this.startTime > 0) {
+      this.elapsedOffset += Date.now() - this.startTime;
+    }
+
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -41,7 +47,7 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
         const transcript = new Transcript({
           id: uuidv4(),
           text: result[0].transcript.trim(),
-          timestamp: Date.now() - this.startTime,
+          timestamp: this.elapsedOffset + (Date.now() - this.startTime),
           language,
           isFinal: result.isFinal,
         });
@@ -61,7 +67,17 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
   }
 
   stop(): void {
+    // Accumulate elapsed time so next start() continues from here
+    if (this.startTime > 0) {
+      this.elapsedOffset += Date.now() - this.startTime;
+      this.startTime = 0;
+    }
     this.recognition?.stop();
+  }
+
+  resetTimer(): void {
+    this.elapsedOffset = 0;
+    this.startTime = 0;
   }
 
   onResult(callback: (transcript: Transcript) => void): void {
