@@ -46,17 +46,17 @@ export function useTranslation() {
 
   const translateBatch = useCallback(
     (transcripts: Transcript[], targetLanguage: Language) => {
-      // Translate immediately - no debounce for fast real-time translation
       const finalTranscripts = transcripts.filter(
-        (t) => t.isFinal && !translations.has(t.id) && !pendingRef.current.has(t.id)
+        (t) => t.isFinal && !translations.has(t.id) && !pendingRef.current.has(t.id) && !failedIds.has(t.id)
       );
       finalTranscripts.forEach((t) => translateTranscript(t, targetLanguage));
     },
-    [translateTranscript, translations]
+    [translateTranscript, translations, failedIds]
   );
 
   const clearTranslations = useCallback(() => {
     setTranslations(new Map());
+    setFailedIds(new Set());
   }, []);
 
   return { translations, isTranslating, failedIds, translateBatch, clearTranslations };
