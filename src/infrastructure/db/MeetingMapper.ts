@@ -15,6 +15,8 @@ export class MeetingMapper {
           language: t.language,
           isFinal: t.isFinal,
           speaker: t.speaker,
+          speakerId: t.speakerId,
+          speakerPhotoURL: t.speakerPhotoURL,
         })
     );
 
@@ -75,6 +77,8 @@ export class MeetingMapper {
         language: t.language,
         isFinal: t.isFinal,
         speaker: t.speaker,
+        speakerId: t.speakerId,
+        speakerPhotoURL: t.speakerPhotoURL,
       })),
       summary: meeting.summary
         ? {

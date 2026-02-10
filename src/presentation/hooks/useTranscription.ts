@@ -2,12 +2,19 @@
 
 import { useState, useCallback, useRef } from 'react';
 import type { Meeting } from '@/src/domain/entities/Meeting';
-import type { Transcript } from '@/src/domain/entities/Transcript';
+import { Transcript } from '@/src/domain/entities/Transcript';
 import type { Language } from '@/src/domain/entities/Language';
 import { useDependencies } from '@/src/presentation/providers/DependencyProvider';
 
+interface SpeakerInfo {
+  speakerId: string;
+  speakerName: string;
+  speakerPhotoURL?: string;
+}
+
 interface UseTranscriptionOptions {
   onTranscriptReady?: (transcript: Transcript) => void;
+  speakerInfo?: SpeakerInfo;
 }
 
 export function useTranscription(options?: UseTranscriptionOptions) {
@@ -35,7 +42,20 @@ export function useTranscription(options?: UseTranscriptionOptions) {
         setIsRecording(true);
         setError(null);
 
-        speechRecognition.onResult((transcript: Transcript) => {
+        speechRecognition.onResult((rawTranscript: Transcript) => {
+          const transcript = options?.speakerInfo
+            ? new Transcript({
+                id: rawTranscript.id,
+                text: rawTranscript.text,
+                timestamp: rawTranscript.timestamp,
+                language: rawTranscript.language,
+                isFinal: rawTranscript.isFinal,
+                speaker: options.speakerInfo.speakerName,
+                speakerId: options.speakerInfo.speakerId,
+                speakerPhotoURL: options.speakerInfo.speakerPhotoURL,
+              })
+            : rawTranscript;
+
           if (transcript.isFinal) {
             setTranscripts((prev) => [...prev, transcript]);
             meetingRef.current = meetingRef.current?.addTranscript(transcript) ?? null;

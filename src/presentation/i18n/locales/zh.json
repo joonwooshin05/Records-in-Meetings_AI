@@ -66,7 +66,7 @@
     "participant": "参与者",
     "noMeetingFound": "未找到会议，请检查代码。",
     "waitingForHost": "等待主持人开始录音...",
-    "hostRecording": "主持人正在录音。实时转录进行中。",
+    "hostRecording": "主持人正在录音。您也可以开始录制。",
     "meetingEnded": "会议已结束。",
     "liveTranscription": "实时转录进行中",
     "joining": "加入中...",

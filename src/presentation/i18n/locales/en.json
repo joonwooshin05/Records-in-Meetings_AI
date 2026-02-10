@@ -66,7 +66,7 @@
     "participant": "Participant",
     "noMeetingFound": "Meeting not found. Please check the code.",
     "waitingForHost": "Waiting for the host to start recording...",
-    "hostRecording": "Host is recording. Live transcription in progress.",
+    "hostRecording": "Host is recording. You can also start your own recording.",
     "meetingEnded": "Meeting has ended.",
     "liveTranscription": "Live transcription in progress",
     "joining": "Joining...",

@@ -108,6 +108,8 @@ export class FirestoreMeetingAdapter implements RealtimeMeetingPort {
       language: transcript.language,
       isFinal: transcript.isFinal,
       speaker: transcript.speaker ?? null,
+      speakerId: transcript.speakerId ?? null,
+      speakerPhotoURL: transcript.speakerPhotoURL ?? null,
       createdAt: serverTimestamp(),
     });
   }
@@ -130,6 +132,8 @@ export class FirestoreMeetingAdapter implements RealtimeMeetingPort {
           language: data.language as Language,
           isFinal: data.isFinal,
           speaker: data.speaker ?? undefined,
+          speakerId: data.speakerId ?? undefined,
+          speakerPhotoURL: data.speakerPhotoURL ?? undefined,
         });
       });
       callback(transcripts);

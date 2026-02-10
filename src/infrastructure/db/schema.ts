@@ -9,6 +9,8 @@ export interface TranscriptRecord {
   language: Language;
   isFinal: boolean;
   speaker?: string;
+  speakerId?: string;
+  speakerPhotoURL?: string;
 }
 
 export interface TranslationRecord {

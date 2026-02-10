@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,9 +17,11 @@ import { useTranslation } from '@/src/presentation/hooks/useTranslation';
 import { useSummary } from '@/src/presentation/hooks/useSummary';
 import { useRealtimeMeeting } from '@/src/presentation/hooks/useRealtimeMeeting';
 import { useDependencies } from '@/src/presentation/providers/DependencyProvider';
+import { useAuth } from '@/src/presentation/providers/AuthProvider';
 import { useI18n } from '@/src/presentation/providers/I18nProvider';
 import type { Language } from '@/src/domain/entities/Language';
 import type { Meeting } from '@/src/domain/entities/Meeting';
+import type { Transcript } from '@/src/domain/entities/Transcript';
 import { ArrowLeft, Loader2, Radio } from 'lucide-react';
 
 export default function ActiveMeetingPage() {
@@ -45,6 +47,7 @@ function ActiveMeetingContent() {
   const isParticipant = role === 'participant';
 
   const { meetingService } = useDependencies();
+  const { user } = useAuth();
   const { t } = useI18n();
 
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
@@ -68,6 +71,13 @@ function ActiveMeetingContent() {
             pushTranscript(transcript);
           }
         : undefined,
+      speakerInfo: user
+        ? {
+            speakerId: user.id,
+            speakerName: user.displayName ?? user.email,
+            speakerPhotoURL: user.photoURL ?? undefined,
+          }
+        : undefined,
     });
 
   const { translations, isTranslating, translateBatch, clearTranslations } = useTranslation();
@@ -78,8 +88,14 @@ function ActiveMeetingContent() {
     generateSummary,
   } = useSummary();
 
-  // The transcripts to display — remote for participant, local for host
-  const displayTranscripts = isParticipant ? remoteTranscripts : transcripts;
+  // Merge local + remote transcripts, deduplicate by id
+  const displayTranscripts = useMemo(() => {
+    if (!meetingCode) return transcripts;
+    const merged = new Map<string, Transcript>();
+    for (const t of remoteTranscripts) merged.set(t.id, t);
+    for (const t of transcripts) merged.set(t.id, t);
+    return Array.from(merged.values()).sort((a, b) => a.timestamp - b.timestamp);
+  }, [meetingCode, remoteTranscripts, transcripts]);
 
   // Re-subscribe to Firestore when page loads with a meeting code
   useEffect(() => {
@@ -118,30 +134,31 @@ function ActiveMeetingContent() {
   }, [displayTranscripts, targetLang, sourceLang, translateBatch]);
 
   const handleStart = useCallback(async () => {
-    if (activeMeeting) {
-      startRecording(activeMeeting, sourceLang);
-      if (meetingCode) {
+    const meetingToUse = activeMeeting ?? realtimeMeeting;
+    if (meetingToUse) {
+      startRecording(meetingToUse, sourceLang);
+      if (meetingCode && !isParticipant) {
         await updateStatus('recording');
       }
     }
-  }, [activeMeeting, sourceLang, startRecording, meetingCode, updateStatus]);
+  }, [activeMeeting, realtimeMeeting, sourceLang, startRecording, meetingCode, updateStatus, isParticipant]);
 
   const handleStop = useCallback(async () => {
     const completed = await stopRecording();
     if (completed) {
       setActiveMeeting(completed);
     }
-    if (meetingCode) {
+    if (meetingCode && !isParticipant) {
       await updateStatus('completed');
     }
-  }, [stopRecording, meetingCode, updateStatus]);
+  }, [stopRecording, meetingCode, updateStatus, isParticipant]);
 
   const handlePause = useCallback(() => {
     pauseRecording();
-    if (meetingCode) {
+    if (meetingCode && !isParticipant) {
       updateStatus('paused');
     }
-  }, [pauseRecording, meetingCode, updateStatus]);
+  }, [pauseRecording, meetingCode, updateStatus, isParticipant]);
 
   const handleSaveAndLeave = useCallback(async () => {
     await saveAndLeave();
@@ -159,9 +176,11 @@ function ActiveMeetingContent() {
     }
   }, [meetingId, activeMeeting, displayTranscripts, sourceLang, generateSummary]);
 
+  const meetingStatus = realtimeMeeting?.status ?? meeting?.status ?? activeMeeting?.status ?? 'idle';
+  // Participant's own recording status is independent from host meeting status
   const currentStatus = isParticipant
-    ? realtimeMeeting?.status ?? 'idle'
-    : meeting?.status ?? activeMeeting?.status ?? 'idle';
+    ? (isRecording ? 'recording' : (transcripts.length > 0 ? 'paused' : 'idle'))
+    : meetingStatus;
 
   const formatDuration = () => {
     if (displayTranscripts.length === 0) return '00:00';
@@ -193,12 +212,8 @@ function ActiveMeetingContent() {
           <ParticipantList participants={participants} />
         </div>
         <div className="flex items-center gap-3">
-          {!isParticipant && (
-            <>
-              <LanguageSelector label={t('meeting.sourceLang')} value={sourceLang} onChange={setSourceLang} />
-              <span className="text-muted-foreground">→</span>
-            </>
-          )}
+          <LanguageSelector label={t('meeting.sourceLang')} value={sourceLang} onChange={setSourceLang} />
+          <span className="text-muted-foreground">→</span>
           <LanguageSelector
             label={t('meeting.targetLang')}
             value={targetLang}
@@ -216,15 +231,8 @@ function ActiveMeetingContent() {
         </div>
       )}
 
-      {/* Participant waiting state */}
-      {isParticipant && currentStatus === 'idle' && (
-        <div className="flex items-center gap-2 bg-muted rounded-md px-4 py-2 mb-4 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {t('realtime.waitingForHost')}
-        </div>
-      )}
-
-      {isParticipant && currentStatus === 'recording' && (
+      {/* Host recording status indicator for participants */}
+      {isParticipant && meetingStatus === 'recording' && (
         <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950 rounded-md px-4 py-2 mb-4 text-sm text-red-600 dark:text-red-400">
           <Radio className="h-4 w-4 animate-pulse" />
           {t('realtime.hostRecording')}
@@ -302,20 +310,14 @@ function ActiveMeetingContent() {
       {/* Controls */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          {isParticipant ? (
-            <div className="text-sm text-muted-foreground">
-              {currentStatus === 'completed' ? t('realtime.meetingEnded') : t('realtime.liveTranscription')}
-            </div>
-          ) : (
-            <RecordingControls
-              status={currentStatus}
-              onStart={handleStart}
-              onStop={handleStop}
-              onPause={handlePause}
-              onSaveAndLeave={handleSaveAndLeave}
-              duration={formatDuration()}
-            />
-          )}
+          <RecordingControls
+            status={currentStatus}
+            onStart={handleStart}
+            onStop={handleStop}
+            onPause={handlePause}
+            onSaveAndLeave={isParticipant ? undefined : handleSaveAndLeave}
+            duration={formatDuration()}
+          />
         </div>
         {displayTranscripts.filter((t) => t.isFinal).length > 0 && (
           <div className="flex justify-end">
