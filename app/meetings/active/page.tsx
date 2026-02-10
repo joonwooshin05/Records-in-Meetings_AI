@@ -316,7 +316,7 @@ function ActiveMeetingContent() {
             onStart={handleStart}
             onStop={handleStop}
             onPause={handlePause}
-            onSaveAndLeave={isParticipant ? undefined : handleSaveAndLeave}
+            onSaveAndLeave={handleSaveAndLeave}
             duration={formatDuration()}
           />
         </div>
