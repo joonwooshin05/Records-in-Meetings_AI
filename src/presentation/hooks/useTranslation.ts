@@ -6,8 +6,8 @@ import type { Transcript } from '@/src/domain/entities/Transcript';
 import type { Language } from '@/src/domain/entities/Language';
 import { useDependencies } from '@/src/presentation/providers/DependencyProvider';
 
-const DELAY_MS = 300;
-const MAX_RETRIES = 2;
+const DELAY_MS = 1000;
+const MAX_RETRIES = 3;
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -60,8 +60,8 @@ export function useTranslation() {
           });
           success = true;
           break;
-        } catch {
-          // will retry
+        } catch (err) {
+          console.error(`[Translation] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed for "${transcript.text.slice(0, 30)}":`, err);
         }
       }
 
