@@ -88,13 +88,18 @@ function ActiveMeetingContent() {
     generateSummary,
   } = useSummary();
 
-  // Merge local + remote transcripts, deduplicate by id
+  // Merge local + remote transcripts, deduplicate by id, always sort by createdAt
   const displayTranscripts = useMemo(() => {
-    if (!meetingCode) return transcripts;
-    const merged = new Map<string, Transcript>();
-    for (const t of remoteTranscripts) merged.set(t.id, t);
-    for (const t of transcripts) merged.set(t.id, t);
-    return Array.from(merged.values()).sort((a, b) => a.createdAt - b.createdAt);
+    let items: Transcript[];
+    if (meetingCode) {
+      const merged = new Map<string, Transcript>();
+      for (const t of remoteTranscripts) merged.set(t.id, t);
+      for (const t of transcripts) merged.set(t.id, t);
+      items = Array.from(merged.values());
+    } else {
+      items = [...transcripts];
+    }
+    return items.sort((a, b) => a.createdAt - b.createdAt);
   }, [meetingCode, remoteTranscripts, transcripts]);
 
   // Re-subscribe to Firestore when page loads with a meeting code
