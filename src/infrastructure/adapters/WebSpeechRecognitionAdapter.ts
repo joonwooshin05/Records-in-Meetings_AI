@@ -80,6 +80,11 @@ export class WebSpeechRecognitionAdapter implements SpeechRecognitionPort {
     this.startTime = 0;
   }
 
+  setElapsedOffset(offset: number): void {
+    this.elapsedOffset = offset;
+    this.startTime = 0;
+  }
+
   onResult(callback: (transcript: Transcript) => void): void {
     this.resultCallback = callback;
   }

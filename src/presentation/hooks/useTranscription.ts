@@ -18,6 +18,14 @@ interface UseTranscriptionOptions {
   speakerInfo?: SpeakerInfo;
 }
 
+function syncAdapterOffset(speechRecognition: any, transcripts: Transcript[]) {
+  if (transcripts.length === 0) return;
+  if ('setElapsedOffset' in speechRecognition) {
+    const maxTs = transcripts.reduce((max, t) => Math.max(max, t.timestamp), 0);
+    (speechRecognition as WebSpeechRecognitionAdapter).setElapsedOffset(maxTs);
+  }
+}
+
 export function useTranscription(options?: UseTranscriptionOptions) {
   const { speechRecognition, meetingService } = useDependencies();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
@@ -26,6 +34,16 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   const [error, setError] = useState<string | null>(null);
   const meetingRef = useRef<Meeting | null>(null);
   const sessionRef = useRef(0);
+  const transcriptsRef = useRef<Transcript[]>([]);
+
+  // Keep ref in sync with state
+  const updateTranscripts = useCallback((updater: Transcript[] | ((prev: Transcript[]) => Transcript[])) => {
+    setTranscripts((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      transcriptsRef.current = next;
+      return next;
+    });
+  }, []);
 
   const startRecording = useCallback(
     async (activeMeeting: Meeting, language: Language) => {
@@ -40,15 +58,15 @@ export function useTranscription(options?: UseTranscriptionOptions) {
         meetingRef.current = recordingMeeting;
 
         if (activeMeeting.status === 'idle') {
-          setTranscripts([]);
+          updateTranscripts([]);
           sessionRef.current = 0;
-          // Reset timer for fresh recording
           if ('resetTimer' in speechRecognition) {
             (speechRecognition as WebSpeechRecognitionAdapter).resetTimer();
           }
         } else {
-          // Resuming from pause — increment session
+          // Resuming from pause — increment session and sync timer offset
           sessionRef.current++;
+          syncAdapterOffset(speechRecognition, transcriptsRef.current);
         }
 
         setIsRecording(true);
@@ -70,11 +88,11 @@ export function useTranscription(options?: UseTranscriptionOptions) {
           });
 
           if (transcript.isFinal) {
-            setTranscripts((prev) => [...prev, transcript]);
+            updateTranscripts((prev) => [...prev, transcript]);
             meetingRef.current = meetingRef.current?.addTranscript(transcript) ?? null;
             options?.onTranscriptReady?.(transcript);
           } else {
-            setTranscripts((prev) => {
+            updateTranscripts((prev) => {
               const withoutInterim = prev.filter((t) => t.isFinal);
               return [...withoutInterim, transcript];
             });
@@ -101,7 +119,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
         setError(e instanceof Error ? e.message : 'Failed to start recording');
       }
     },
-    [speechRecognition, options?.onTranscriptReady]
+    [speechRecognition, options?.onTranscriptReady, updateTranscripts]
   );
 
   const stopRecording = useCallback(async () => {
@@ -128,11 +146,12 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   }, [speechRecognition]);
 
   const loadTranscripts = useCallback((saved: Transcript[]) => {
-    setTranscripts(saved);
-    // Set session counter from loaded data
+    updateTranscripts(saved);
     const maxSession = saved.reduce((max, t) => Math.max(max, t.session ?? 0), 0);
     sessionRef.current = maxSession;
-  }, []);
+    // Sync adapter timer to max loaded timestamp so new recordings continue after
+    syncAdapterOffset(speechRecognition, saved);
+  }, [speechRecognition, updateTranscripts]);
 
   const saveAndLeave = useCallback(async () => {
     speechRecognition.stop();
