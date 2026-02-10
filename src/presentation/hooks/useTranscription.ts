@@ -5,6 +5,7 @@ import type { Meeting } from '@/src/domain/entities/Meeting';
 import { Transcript } from '@/src/domain/entities/Transcript';
 import type { Language } from '@/src/domain/entities/Language';
 import { useDependencies } from '@/src/presentation/providers/DependencyProvider';
+import type { WebSpeechRecognitionAdapter } from '@/src/infrastructure/adapters/WebSpeechRecognitionAdapter';
 
 interface SpeakerInfo {
   speakerId: string;
@@ -24,6 +25,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const meetingRef = useRef<Meeting | null>(null);
+  const sessionRef = useRef(0);
 
   const startRecording = useCallback(
     async (activeMeeting: Meeting, language: Language) => {
@@ -36,25 +38,36 @@ export function useTranscription(options?: UseTranscriptionOptions) {
         const recordingMeeting = activeMeeting.start();
         setMeeting(recordingMeeting);
         meetingRef.current = recordingMeeting;
+
         if (activeMeeting.status === 'idle') {
           setTranscripts([]);
+          sessionRef.current = 0;
+          // Reset timer for fresh recording
+          if ('resetTimer' in speechRecognition) {
+            (speechRecognition as WebSpeechRecognitionAdapter).resetTimer();
+          }
+        } else {
+          // Resuming from pause — increment session
+          sessionRef.current++;
         }
+
         setIsRecording(true);
         setError(null);
 
+        const currentSession = sessionRef.current;
+
         speechRecognition.onResult((rawTranscript: Transcript) => {
-          const transcript = options?.speakerInfo
-            ? new Transcript({
-                id: rawTranscript.id,
-                text: rawTranscript.text,
-                timestamp: rawTranscript.timestamp,
-                language: rawTranscript.language,
-                isFinal: rawTranscript.isFinal,
-                speaker: options.speakerInfo.speakerName,
-                speakerId: options.speakerInfo.speakerId,
-                speakerPhotoURL: options.speakerInfo.speakerPhotoURL,
-              })
-            : rawTranscript;
+          const transcript = new Transcript({
+            id: rawTranscript.id,
+            text: rawTranscript.text,
+            timestamp: rawTranscript.timestamp,
+            language: rawTranscript.language,
+            isFinal: rawTranscript.isFinal,
+            speaker: options?.speakerInfo?.speakerName,
+            speakerId: options?.speakerInfo?.speakerId,
+            speakerPhotoURL: options?.speakerInfo?.speakerPhotoURL,
+            session: currentSession,
+          });
 
           if (transcript.isFinal) {
             setTranscripts((prev) => [...prev, transcript]);
@@ -116,6 +129,9 @@ export function useTranscription(options?: UseTranscriptionOptions) {
 
   const loadTranscripts = useCallback((saved: Transcript[]) => {
     setTranscripts(saved);
+    // Set session counter from loaded data
+    const maxSession = saved.reduce((max, t) => Math.max(max, t.session ?? 0), 0);
+    sessionRef.current = maxSession;
   }, []);
 
   const saveAndLeave = useCallback(async () => {
