@@ -11,95 +11,72 @@ export function useTranslation() {
   const [translations, setTranslations] = useState<Map<string, Translation>>(new Map());
   const [isTranslating, setIsTranslating] = useState(false);
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
-  const pendingRef = useRef<Set<string>>(new Set());
 
-  const translateOne = useCallback(
-    (transcript: Transcript, targetLanguage: Language) => {
-      if (pendingRef.current.has(transcript.id)) return;
-      pendingRef.current.add(transcript.id);
-      setIsTranslating(true);
-
-      // Remove from errors if retrying
-      setErrors((prev) => {
-        if (!prev.has(transcript.id)) return prev;
-        const next = new Map(prev);
-        next.delete(transcript.id);
-        return next;
-      });
-
-      translationPort
-        .translate(transcript.text, transcript.language, targetLanguage, transcript.id)
-        .then((translation) => {
-          setTranslations((prev) => {
-            const next = new Map(prev);
-            next.set(transcript.id, translation);
-            return next;
-          });
-        })
-        .catch((err) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error(`[Translation] Failed for "${transcript.text.slice(0, 30)}":`, msg);
-          setErrors((prev) => {
-            const next = new Map(prev);
-            next.set(transcript.id, msg);
-            return next;
-          });
-        })
-        .finally(() => {
-          pendingRef.current.delete(transcript.id);
-          if (pendingRef.current.size === 0) {
-            setIsTranslating(false);
-          }
-        });
-    },
-    [translationPort]
-  );
-
-  const sameLanguageIdsRef = useRef<Set<string>>(new Set());
+  // Use refs for tracking to avoid dependency cycles
+  const processedRef = useRef<Set<string>>(new Set());
 
   const translateBatch = useCallback(
     (transcripts: Transcript[], targetLanguage: Language) => {
       const toTranslate = transcripts.filter(
-        (t) =>
-          t.isFinal &&
-          !translations.has(t.id) &&
-          !pendingRef.current.has(t.id) &&
-          !errors.has(t.id) &&
-          !sameLanguageIdsRef.current.has(t.id)
+        (t) => t.isFinal && !processedRef.current.has(t.id) && t.language !== targetLanguage
       );
 
-      for (const t of toTranslate) {
-        if (t.language === targetLanguage) {
-          // Same language — no translation needed, mark as skipped
-          sameLanguageIdsRef.current.add(t.id);
-          continue;
-        }
-        translateOne(t, targetLanguage);
+      if (toTranslate.length === 0) return;
+
+      setIsTranslating(true);
+      let remaining = toTranslate.length;
+
+      for (const transcript of toTranslate) {
+        processedRef.current.add(transcript.id);
+
+        translationPort
+          .translate(transcript.text, transcript.language, targetLanguage, transcript.id)
+          .then((translation) => {
+            setTranslations((prev) => {
+              const next = new Map(prev);
+              next.set(transcript.id, translation);
+              return next;
+            });
+          })
+          .catch((err) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`[Translation] Failed for "${transcript.text.slice(0, 30)}":`, msg);
+            setErrors((prev) => {
+              const next = new Map(prev);
+              next.set(transcript.id, msg);
+              return next;
+            });
+          })
+          .finally(() => {
+            remaining--;
+            if (remaining === 0) {
+              setIsTranslating(false);
+            }
+          });
       }
     },
-    [translateOne, translations, errors]
+    [translationPort]
   );
 
   const retryFailed = useCallback(
     (transcripts: Transcript[], targetLanguage: Language) => {
-      const failed = transcripts.filter((t) => errors.has(t.id));
-      setErrors(new Map());
-      for (const t of failed) {
-        translateOne(t, targetLanguage);
+      // Remove failed IDs from processed so they can be retried
+      for (const [id] of errors) {
+        processedRef.current.delete(id);
       }
+      setErrors(new Map());
+      translateBatch(transcripts, targetLanguage);
     },
-    [translateOne, errors]
+    [translateBatch, errors]
   );
 
   const clearTranslations = useCallback(() => {
-    pendingRef.current.clear();
-    sameLanguageIdsRef.current.clear();
+    processedRef.current.clear();
     setTranslations(new Map());
     setErrors(new Map());
   }, []);
 
-  // Build failedIds set for backward compatibility
   const failedIds = new Set(errors.keys());
 
-  return { translations, isTranslating, failedIds, errors, sameLanguageIds: sameLanguageIdsRef.current, translateBatch, retryFailed, clearTranslations };
+  return { translations, isTranslating, failedIds, errors, translateBatch, retryFailed, clearTranslations };
 }
