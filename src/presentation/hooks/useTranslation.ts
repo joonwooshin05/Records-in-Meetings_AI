@@ -55,6 +55,8 @@ export function useTranslation() {
     [translationPort]
   );
 
+  const sameLanguageIdsRef = useRef<Set<string>>(new Set());
+
   const translateBatch = useCallback(
     (transcripts: Transcript[], targetLanguage: Language) => {
       const toTranslate = transcripts.filter(
@@ -62,10 +64,16 @@ export function useTranslation() {
           t.isFinal &&
           !translations.has(t.id) &&
           !pendingRef.current.has(t.id) &&
-          !errors.has(t.id)
+          !errors.has(t.id) &&
+          !sameLanguageIdsRef.current.has(t.id)
       );
 
       for (const t of toTranslate) {
+        if (t.language === targetLanguage) {
+          // Same language — no translation needed, mark as skipped
+          sameLanguageIdsRef.current.add(t.id);
+          continue;
+        }
         translateOne(t, targetLanguage);
       }
     },
@@ -85,6 +93,7 @@ export function useTranslation() {
 
   const clearTranslations = useCallback(() => {
     pendingRef.current.clear();
+    sameLanguageIdsRef.current.clear();
     setTranslations(new Map());
     setErrors(new Map());
   }, []);
@@ -92,5 +101,5 @@ export function useTranslation() {
   // Build failedIds set for backward compatibility
   const failedIds = new Set(errors.keys());
 
-  return { translations, isTranslating, failedIds, errors, translateBatch, retryFailed, clearTranslations };
+  return { translations, isTranslating, failedIds, errors, sameLanguageIds: sameLanguageIdsRef.current, translateBatch, retryFailed, clearTranslations };
 }

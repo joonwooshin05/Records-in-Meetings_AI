@@ -273,6 +273,7 @@ function ActiveMeetingContent() {
                   transcripts={displayTranscripts}
                   translations={translations}
                   isTranslating={isTranslating}
+                  targetLanguage={targetLang}
                   failedIds={failedIds}
                   errors={errors}
                   onRetry={() => retryFailed(displayTranscripts, targetLang)}
@@ -309,6 +310,7 @@ function ActiveMeetingContent() {
                 transcripts={displayTranscripts}
                 translations={translations}
                 isTranslating={isTranslating}
+                targetLanguage={targetLang}
                 failedIds={failedIds}
                 errors={errors}
                 onRetry={() => retryFailed(displayTranscripts, targetLang)}

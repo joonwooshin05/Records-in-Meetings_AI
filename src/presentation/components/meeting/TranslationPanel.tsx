@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { Transcript } from '@/src/domain/entities/Transcript';
 import type { Translation } from '@/src/domain/entities/Translation';
+import type { Language } from '@/src/domain/entities/Language';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ interface TranslationPanelProps {
   transcripts: Transcript[];
   translations: Map<string, Translation>;
   isTranslating: boolean;
+  targetLanguage: Language;
   failedIds?: Set<string>;
   errors?: Map<string, string>;
   onRetry?: () => void;
@@ -29,6 +31,7 @@ export function TranslationPanel({
   transcripts,
   translations,
   isTranslating,
+  targetLanguage,
   failedIds,
   errors,
   onRetry,
@@ -58,6 +61,7 @@ export function TranslationPanel({
         {finalTranscripts.map((transcript) => {
           const translation = translations.get(transcript.id);
           const errorMsg = errors?.get(transcript.id);
+          const isSameLanguage = transcript.language === targetLanguage;
           return (
             <div key={transcript.id} className="flex gap-3">
               <span className="text-xs text-muted-foreground whitespace-nowrap pt-1">
@@ -66,6 +70,8 @@ export function TranslationPanel({
               <div className="flex-1">
                 {translation ? (
                   <p className="text-sm leading-relaxed">{translation.translatedText}</p>
+                ) : isSameLanguage ? (
+                  <p className="text-sm leading-relaxed text-muted-foreground">{transcript.text}</p>
                 ) : errorMsg ? (
                   <p className="text-sm text-destructive italic">
                     Error: {errorMsg}
