@@ -29,38 +29,29 @@ export class MyMemoryTranslationAdapter implements TranslationPort {
       });
     }
 
-    const langPair = `autodetect|${LANGUAGE_CODES[to]}`;
+    const langPair = `${LANGUAGE_CODES[from]}|${LANGUAGE_CODES[to]}`;
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
 
-    let lastError: Error | null = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Translation API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const translatedText = data.responseData?.translatedText ?? '';
-
-        if (!translatedText || translatedText === text) {
-          throw new Error('No translation returned');
-        }
-
-        return new Translation({
-          id: uuidv4(),
-          sourceText: text,
-          translatedText,
-          sourceLanguage: from,
-          targetLanguage: to,
-          transcriptId,
-          createdAt: new Date(),
-        });
-      } catch (e) {
-        lastError = e instanceof Error ? e : new Error('Translation failed');
-        if (attempt < 1) await new Promise((r) => setTimeout(r, 1000));
-      }
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Translation API error: ${response.status}`);
     }
-    throw lastError!;
+
+    const data = await response.json();
+    const translatedText = data.responseData?.translatedText ?? '';
+
+    if (!translatedText) {
+      throw new Error('No translation returned');
+    }
+
+    return new Translation({
+      id: uuidv4(),
+      sourceText: text,
+      translatedText,
+      sourceLanguage: from,
+      targetLanguage: to,
+      transcriptId,
+      createdAt: new Date(),
+    });
   }
 }
