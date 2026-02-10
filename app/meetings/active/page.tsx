@@ -265,15 +265,15 @@ function ActiveMeetingContent() {
         {/* Desktop layout */}
         <div className="hidden md:flex md:flex-col md:gap-4 h-full">
           <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-            <div className="border rounded-lg flex flex-col">
-              <div className="px-4 py-2 border-b font-medium text-sm">{t('meeting.transcript')}</div>
-              <div className="flex-1 min-h-0">
+            <div className="border rounded-lg flex flex-col min-h-0 overflow-hidden">
+              <div className="px-4 py-2 border-b font-medium text-sm shrink-0">{t('meeting.transcript')}</div>
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <TranscriptPanel transcripts={displayTranscripts} emptyMessage={t('meeting.noTranscripts')} />
               </div>
             </div>
-            <div className="border rounded-lg flex flex-col">
-              <div className="px-4 py-2 border-b font-medium text-sm">{t('meeting.translation')}</div>
-              <div className="flex-1 min-h-0">
+            <div className="border rounded-lg flex flex-col min-h-0 overflow-hidden">
+              <div className="px-4 py-2 border-b font-medium text-sm shrink-0">{t('meeting.translation')}</div>
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <TranslationPanel
                   transcripts={displayTranscripts}
                   translations={translations}
@@ -307,10 +307,10 @@ function ActiveMeetingContent() {
               <TabsTrigger value="translation">{t('meeting.translation')}</TabsTrigger>
               <TabsTrigger value="summary">{t('meeting.summary')}</TabsTrigger>
             </TabsList>
-            <TabsContent value="transcript" className="flex-1 min-h-0 border rounded-lg">
+            <TabsContent value="transcript" className="flex-1 min-h-0 border rounded-lg overflow-hidden">
               <TranscriptPanel transcripts={displayTranscripts} emptyMessage={t('meeting.noTranscripts')} />
             </TabsContent>
-            <TabsContent value="translation" className="flex-1 min-h-0 border rounded-lg">
+            <TabsContent value="translation" className="flex-1 min-h-0 border rounded-lg overflow-hidden">
               <TranslationPanel
                 transcripts={displayTranscripts}
                 translations={translations}
