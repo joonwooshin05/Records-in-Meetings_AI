@@ -24,7 +24,7 @@ export function RecordingControls({
 }: RecordingControlsProps) {
   if (status === 'completed') {
     return (
-      <div className="flex items-center gap-3 p-4">
+      <div className="flex flex-wrap items-center gap-3 p-4">
         <Badge variant="secondary">Recording completed</Badge>
         {duration && <span className="text-sm text-muted-foreground">{duration}</span>}
       </div>
@@ -32,7 +32,7 @@ export function RecordingControls({
   }
 
   return (
-    <div className="flex items-center gap-3 p-4">
+    <div className="flex flex-wrap items-center gap-3 p-4">
       {status === 'idle' && (
         <Button onClick={onStart} size="lg" className="gap-2">
           <Mic className="h-4 w-4" />

@@ -10,6 +10,7 @@ interface TranslationPanelProps {
   transcripts: Transcript[];
   translations: Map<string, Translation>;
   isTranslating: boolean;
+  failedIds?: Set<string>;
   emptyMessage?: string;
 }
 
@@ -24,6 +25,7 @@ export function TranslationPanel({
   transcripts,
   translations,
   isTranslating,
+  failedIds,
   emptyMessage,
 }: TranslationPanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,8 @@ export function TranslationPanel({
               <div className="flex-1">
                 {translation ? (
                   <p className="text-sm leading-relaxed">{translation.translatedText}</p>
+                ) : failedIds?.has(transcript.id) ? (
+                  <p className="text-sm text-destructive italic">Translation failed</p>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
                     {isTranslating ? 'Translating...' : 'Waiting for translation...'}

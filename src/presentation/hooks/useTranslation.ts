@@ -10,6 +10,7 @@ export function useTranslation() {
   const { translationPort } = useDependencies();
   const [translations, setTranslations] = useState<Map<string, Translation>>(new Map());
   const [isTranslating, setIsTranslating] = useState(false);
+  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const pendingRef = useRef<Set<string>>(new Set());
   const translateTranscript = useCallback(
     async (transcript: Transcript, targetLanguage: Language) => {
@@ -32,7 +33,7 @@ export function useTranslation() {
           return next;
         });
       } catch {
-        // Translation failed silently - we just don't show the translation
+        setFailedIds((prev) => new Set(prev).add(transcript.id));
       } finally {
         pendingRef.current.delete(transcript.id);
         if (pendingRef.current.size === 0) {
@@ -58,5 +59,5 @@ export function useTranslation() {
     setTranslations(new Map());
   }, []);
 
-  return { translations, isTranslating, translateBatch, clearTranslations };
+  return { translations, isTranslating, failedIds, translateBatch, clearTranslations };
 }
