@@ -80,7 +80,7 @@ function ActiveMeetingContent() {
         : undefined,
     });
 
-  const { translations, isTranslating, translateBatch, clearTranslations } = useTranslation();
+  const { translations, isTranslating, failedIds, translateBatch, clearTranslations } = useTranslation();
   const {
     summary,
     isGenerating,
@@ -257,6 +257,7 @@ function ActiveMeetingContent() {
                   transcripts={displayTranscripts}
                   translations={translations}
                   isTranslating={isTranslating}
+                  failedIds={failedIds}
                 />
               </div>
             </div>
