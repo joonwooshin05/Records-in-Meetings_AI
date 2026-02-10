@@ -231,31 +231,14 @@ function ActiveMeetingContent() {
           {meetingCode && <MeetingCodeDisplay code={meetingCode} />}
           <ParticipantList participants={participants} />
         </div>
-        <div className="flex items-center gap-3">
-          <LanguageSelector
-            label={t('meeting.sourceLang')}
-            value={sourceLang}
-            onChange={(v) => {
-              setSourceLang(v);
-              if (isRecording) {
-                const meetingToUse = activeMeeting ?? realtimeMeeting;
-                if (meetingToUse) {
-                  speechRecognition.stop();
-                  setTimeout(() => startRecording(meetingToUse, v), 300);
-                }
-              }
-            }}
-          />
-          <span className="text-muted-foreground">→</span>
-          <LanguageSelector
-            label={t('meeting.targetLang')}
-            value={targetLang}
-            onChange={(v) => {
-              setTargetLang(v);
-              clearTranslations();
-            }}
-          />
-        </div>
+        <LanguageSelector
+          label={t('meeting.targetLang')}
+          value={targetLang}
+          onChange={(v) => {
+            setTargetLang(v);
+            clearTranslations();
+          }}
+        />
       </div>
 
       {error && (
