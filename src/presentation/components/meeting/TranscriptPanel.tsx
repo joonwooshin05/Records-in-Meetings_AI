@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Transcript } from '@/src/domain/entities/Transcript';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -69,14 +69,13 @@ function SpeakerAvatar({ name, photoURL }: { name?: string; photoURL?: string })
 }
 
 export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelProps) {
-  const topRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcripts]);
 
-  const groups = useMemo(() => groupBySpeaker(transcripts), [transcripts]);
-  const reversedGroups = useMemo(() => [...groups].reverse(), [groups]);
+  const groups = groupBySpeaker(transcripts);
 
   if (transcripts.length === 0) {
     return (
@@ -89,8 +88,7 @@ export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelPr
   return (
     <ScrollArea className="h-full">
       <div className="space-y-4 p-4">
-        <div ref={topRef} />
-        {reversedGroups.map((group, gi) => (
+        {groups.map((group, gi) => (
           <div key={`group-${gi}`} className="flex gap-3">
             <SpeakerAvatar name={group.speaker} photoURL={group.speakerPhotoURL} />
             <div className="flex-1 min-w-0">
@@ -118,6 +116,7 @@ export function TranscriptPanel({ transcripts, emptyMessage }: TranscriptPanelPr
             </div>
           </div>
         ))}
+        <div ref={bottomRef} />
       </div>
     </ScrollArea>
   );
