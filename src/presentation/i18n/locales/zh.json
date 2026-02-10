@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "Meeting AI"
+  },
+  "dashboard": {
+    "title": "会议仪表盘",
+    "newMeeting": "新会议",
+    "noMeetings": "还没有会议。开始您的第一个会议吧！",
+    "transcripts": "条记录",
+    "summaryAvailable": "摘要可用"
+  },
+  "meeting": {
+    "transcript": "会议记录",
+    "translation": "翻译",
+    "summary": "摘要",
+    "recording": "录音中",
+    "paused": "已暂停",
+    "completed": "已完成",
+    "idle": "就绪",
+    "start": "开始录音",
+    "stop": "停止",
+    "pause": "暂停",
+    "resume": "继续",
+    "generateSummary": "生成摘要",
+    "generating": "正在生成摘要...",
+    "translating": "翻译中...",
+    "noTranscripts": "开始录音后，会议记录将在此显示。",
+    "noSummary": "录音结束后生成摘要。",
+    "sourceLang": "源语言",
+    "targetLang": "目标语言",
+    "duration": "时长",
+    "meetingTitle": "会议标题",
+    "enterTitle": "请输入会议标题",
+    "saveAndLeave": "保存并离开"
+  },
+  "settings": {
+    "title": "设置",
+    "languageDefaults": "语言设置",
+    "defaultSourceLang": "默认源语言",
+    "defaultTargetLang": "默认目标语言",
+    "uiLanguage": "界面语言",
+    "clearData": "清除所有数据",
+    "clearConfirm": "确定要删除吗？所有会议数据将被删除。",
+    "speechNotSupported": "您的浏览器不支持语音识别。请使用Chrome。"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "退出",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "orContinueWith": "或者",
+    "google": "使用Google继续",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？",
+    "passwordMismatch": "密码不匹配"
+  },
+  "realtime": {
+    "joinMeeting": "加入会议",
+    "meetingCode": "会议代码",
+    "enterCode": "请输入会议代码",
+    "copied": "已复制！",
+    "participants": "参与者",
+    "host": "主持人",
+    "participant": "参与者",
+    "noMeetingFound": "未找到会议，请检查代码。",
+    "waitingForHost": "等待主持人开始录音...",
+    "hostRecording": "主持人正在录音。实时转录进行中。",
+    "meetingEnded": "会议已结束。",
+    "liveTranscription": "实时转录进行中",
+    "joining": "加入中...",
+    "leaving": "离开中..."
+  },
+  "common": {
+    "back": "返回",
+    "delete": "删除",
+    "cancel": "取消",
+    "confirm": "确认",
+    "loading": "加载中...",
+    "error": "发生错误"
+  }
+}
